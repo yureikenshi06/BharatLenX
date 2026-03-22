@@ -7,9 +7,11 @@ import { signOut } from '../lib/supabase'
 import { loadCreds, saveCreds, exchangeAuthCode, clearTokenLocal } from '../hooks/useTrades'
 import { supabase } from '../lib/supabase'
 
-const ENV_APP_ID   = import.meta.env.VITE_FYERS_APP_ID      || ''
-const ENV_SECRET   = import.meta.env.VITE_FYERS_SECRET_KEY  || ''
-const ENV_REDIRECT = import.meta.env.VITE_FYERS_REDIRECT_URI || (typeof window !== 'undefined' ? window.location.origin : '')
+// These are bridged from both VITE_FYERS_* and FYERS_* via vite.config.js
+const ENV_APP_ID   = import.meta.env.VITE_FYERS_APP_ID       || ''
+const ENV_SECRET   = import.meta.env.VITE_FYERS_SECRET_KEY   || ''
+const ENV_REDIRECT = import.meta.env.VITE_FYERS_REDIRECT_URI || 'https://www.google.com'
+const CREDS_FROM_ENV = !!(ENV_APP_ID && ENV_SECRET)
 
 export default function SettingsPage({
   trades, activeStats,
@@ -19,11 +21,11 @@ export default function SettingsPage({
 }) {
   const { user } = useAuth()
 
-  // Load saved creds — pre-filled from .env or localStorage
+  // Creds — always loaded from env vars (set in Netlify), no need to type them
   const saved = loadCreds()
-  const [appId,       setAppId]       = useState(saved?.appId       || ENV_APP_ID)
-  const [secretKey,   setSecretKey]   = useState(saved?.secretKey   || ENV_SECRET)
-  const [redirectUri, setRedirectUri] = useState(saved?.redirectUri || ENV_REDIRECT)
+  const [appId,       setAppId]       = useState(ENV_APP_ID   || saved?.appId       || '')
+  const [secretKey,   setSecretKey]   = useState(ENV_SECRET   || saved?.secretKey   || '')
+  const [redirectUri, setRedirectUri] = useState(ENV_REDIRECT || saved?.redirectUri || 'https://www.google.com')
   const [redirectUrl, setRedirectUrl] = useState(null)
 
 
@@ -211,15 +213,15 @@ export default function SettingsPage({
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
           <div>
             <div style={{ fontSize:10, color:T.muted, textTransform:'uppercase', letterSpacing:1.2, marginBottom:5 }}>
-              App ID <span style={{ color:T.green, fontSize:9 }}>{appId ? '✓ saved' : ''}</span>
+              App ID <span style={{ color:T.green, fontSize:9 }}>{CREDS_FROM_ENV ? '🔒 from Netlify env' : appId ? '✓ saved' : ''}</span>
             </div>
-            <Input value={appId} onChange={e => updateCreds('appId', e.target.value)} placeholder="e.g. JHBKBLSUHB-100"/>
+            <Input value={appId} onChange={e => !CREDS_FROM_ENV && updateCreds('appId', e.target.value)} readOnly={CREDS_FROM_ENV} placeholder="e.g. JHBKBLSUHB-100" style={{ opacity: CREDS_FROM_ENV ? 0.7 : 1 }}/>
           </div>
           <div>
             <div style={{ fontSize:10, color:T.muted, textTransform:'uppercase', letterSpacing:1.2, marginBottom:5 }}>
-              Secret Key <span style={{ color:T.green, fontSize:9 }}>{secretKey ? '✓ saved' : ''}</span>
+              Secret Key <span style={{ color:T.green, fontSize:9 }}>{CREDS_FROM_ENV ? '🔒 from Netlify env' : secretKey ? '✓ saved' : ''}</span>
             </div>
-            <Input type="password" value={secretKey} onChange={e => updateCreds('secretKey', e.target.value)} placeholder="Your app secret"/>
+            <Input type="password" value={CREDS_FROM_ENV ? "••••••••••" : secretKey} onChange={e => !CREDS_FROM_ENV && updateCreds('secretKey', e.target.value)} readOnly={CREDS_FROM_ENV} placeholder="Your app secret" style={{ opacity: CREDS_FROM_ENV ? 0.7 : 1 }}/>
           </div>
         </div>
         <div style={{ marginBottom:14 }}>
@@ -311,77 +313,6 @@ export default function SettingsPage({
           </Btn>
         )}
       </Card>
-
-      {/* ── Supabase SQL ── */}
-      <Card>
-        <SectionHead title="Supabase Setup" sub="One-time SQL — run in SQL Editor"/>
-        <div style={{ fontSize: 11, color: T.muted, marginBottom: 10, lineHeight: 1.7 }}>
-          Run this once in your Supabase dashboard (SQL Editor) to create the trades table:
-        </div>
-        <pre style={{ background: T.surface, borderRadius: 8, padding: '14px', fontFamily: T.fontMono, fontSize: 10, color: T.textMid, overflowX: 'auto', border: `1px solid ${T.border}`, lineHeight: 1.9 }}>{`-- Run each block separately if you get "already exists" errors
--- Trades table
-create table if not exists trades (
-  id           text primary key,
-  user_id      uuid references auth.users not null,
-  symbol       text, segment text, side text,
-  qty          numeric, price numeric,
-  pnl          numeric default 0,
-  fee          numeric default 0,
-  equity       numeric default 100000,
-  exchange     text, product_type text,
-  trade_time   timestamptz,
-  source       text default 'fyers_api',
-  raw_id       text,
-  created_at   timestamptz default now()
-);
-alter table trades enable row level security;
-drop policy if exists "own" on trades;
-create policy "own" on trades
-  for all using (auth.uid() = user_id);
-create index if not exists trades_user_time
-  on trades(user_id, trade_time);
-
--- Fyers token (cross-device sync)
-create table if not exists fyers_tokens (
-  user_id      uuid primary key references auth.users,
-  client_id    text not null,
-  access_token text not null,
-  expires_at   timestamptz not null,
-  updated_at   timestamptz default now()
-);
-alter table fyers_tokens enable row level security;
-drop policy if exists "own" on fyers_tokens;
-create policy "own" on fyers_tokens
-  for all using (auth.uid() = user_id);
-
--- Trade notes
-create table if not exists trade_notes (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users not null,
-  title text, body text, mood text, tags text[],
-  symbol text, date date,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-alter table trade_notes enable row level security;
-drop policy if exists "own" on trade_notes;
-create policy "own" on trade_notes
-  for all using (auth.uid() = user_id);
-
--- Capital flow
-create table if not exists capital_flow (
-  id text primary key,
-  user_id uuid references auth.users not null,
-  type text not null, amount numeric not null,
-  time bigint not null, date text, note text,
-  created_at timestamptz default now()
-);
-alter table capital_flow enable row level security;
-drop policy if exists "own" on capital_flow;
-create policy "own" on capital_flow
-  for all using (auth.uid() = user_id);`}
-        </pre>
-      </Card>
-    </div>
+</div>
   )
 }

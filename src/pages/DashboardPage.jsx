@@ -43,7 +43,39 @@ export default function DashboardPage({ trades, stats, activeStats, segment, set
     )
   }
 
-  if (!trades?.length) return <div style={{ padding:32, color:T.muted, fontFamily:T.fontSans }}>No trade data loaded.</div>
+  // No trades at all — show a proper empty dashboard (not a blank div)
+  if (!trades?.length) return (
+    <div style={{ padding:'24px 28px', fontFamily:T.fontSans }}>
+      <div style={{ marginBottom:18, paddingBottom:14, borderBottom:`1px solid ${T.border}` }}>
+        <div style={{ fontSize:11, color:T.muted, textTransform:'uppercase', letterSpacing:1.5, marginBottom:4 }}>Overview · NSE / NFO</div>
+        <div style={{ fontSize:22, fontWeight:700 }}>Dashboard</div>
+      </div>
+      {/* KPI grid — all zeros */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+        {[
+          { l:'Net P&L',      v:'₹0.00',  sub:'No trades yet' },
+          { l:'Total Trades', v:'0',       sub:'Connect Fyers to sync' },
+          { l:'Win Rate',     v:'—',       sub:'—' },
+          { l:'Max Drawdown', v:'₹0.00',  sub:'—' },
+        ].map(k => (
+          <div key={k.l} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:'16px 18px' }}>
+            <div style={{ fontSize:9, color:T.muted, textTransform:'uppercase', letterSpacing:1.5, marginBottom:8 }}>{k.l}</div>
+            <div style={{ fontSize:22, fontWeight:700, color:T.text }}>{k.v}</div>
+            <div style={{ fontSize:10, color:T.muted, marginTop:4 }}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+      {/* Empty chart area */}
+      <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:'48px 24px', textAlign:'center' }}>
+        <div style={{ fontSize:36, marginBottom:14, opacity:0.12 }}>◈</div>
+        <div style={{ fontSize:15, fontWeight:600, color:T.text, marginBottom:8 }}>No trades synced yet</div>
+        <div style={{ fontSize:12, color:T.muted, lineHeight:1.8, maxWidth:380, margin:'0 auto' }}>
+          Go to <strong style={{ color:T.accent }}>Settings</strong> → connect your Fyers account.<br/>
+          All trades will sync automatically and appear here.
+        </div>
+      </div>
+    </div>
+  )
 
   const periodData = (st[period+'Arr']||[]).map(d=>({label:d.label,...d}))
 

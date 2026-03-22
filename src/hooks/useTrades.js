@@ -12,9 +12,24 @@ const CREDS_KEY   = 'blx_app_creds'
 const TOKEN_KEY   = 'blx_fyers_token'
 const LOCAL_TRADES = 'blx_trades_local'  // used when not signed in to Supabase
 
-// ── Credentials — saved permanently, pre-filled from .env ────────────────────
+// ── Credentials — auto-filled from Netlify env vars (VITE_ prefix) ─────────
+// Add VITE_FYERS_APP_ID, VITE_FYERS_SECRET_KEY, VITE_FYERS_REDIRECT_URI
+// to Netlify → Site Settings → Environment Variables
+const ENV_CREDS = {
+  appId:       import.meta.env.VITE_FYERS_APP_ID       || '',
+  secretKey:   import.meta.env.VITE_FYERS_SECRET_KEY   || '',
+  redirectUri: import.meta.env.VITE_FYERS_REDIRECT_URI || 'https://www.google.com',
+}
+
 export function loadCreds() {
-  try { return JSON.parse(localStorage.getItem(CREDS_KEY) || 'null') } catch { return null }
+  try {
+    const stored = JSON.parse(localStorage.getItem(CREDS_KEY) || 'null')
+    return {
+      appId:       ENV_CREDS.appId       || stored?.appId       || '',
+      secretKey:   ENV_CREDS.secretKey   || stored?.secretKey   || '',
+      redirectUri: ENV_CREDS.redirectUri || stored?.redirectUri || 'https://www.google.com',
+    }
+  } catch { return ENV_CREDS }
 }
 export function saveCreds(appId, secretKey, redirectUri) {
   try { localStorage.setItem(CREDS_KEY, JSON.stringify({ appId, secretKey, redirectUri })) } catch {}

@@ -9,13 +9,20 @@ import { Card, SectionHead, ChartTooltip } from '../components/UI'
 
 export default function AnalyticsPage({ trades, stats }) {
   if (!trades?.length) return (
-    <div style={{ padding:'32px 28px', fontFamily:'var(--font-sans, sans-serif)' }}>
-      <div style={{ fontSize:11, color:'#3a527a', textTransform:'uppercase', letterSpacing:1.5, marginBottom:4 }}>Analysis</div>
-      <div style={{ fontSize:22, fontWeight:700, marginBottom:24 }}>Advanced Analytics</div>
-      <div style={{ textAlign:'center', padding:'60px 24px', background:'#0b1020', border:'1px solid #182040', borderRadius:10 }}>
-        <div style={{ fontSize:32, opacity:0.2, marginBottom:14 }}>📊</div>
-        <div style={{ fontSize:15, fontWeight:600, color:'#dde4f5', marginBottom:8 }}>No trades to analyse</div>
-        <div style={{ fontSize:12, color:'#3a527a' }}>Import your Fyers CSV or connect Fyers API in Settings.</div>
+    <div style={{ padding:'32px 28px', fontFamily:T.fontSans }}>
+      <div style={{ fontSize:11, color:T.muted, textTransform:'uppercase', letterSpacing:1.5, marginBottom:4 }}>Analysis</div>
+      <div style={{ fontSize:22, fontWeight:700, marginBottom:20 }}>Advanced Analytics</div>
+      {/* Empty chart placeholders */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+        {['P&L Waterfall','Win Distribution','Time Heatmap','Risk/Reward'].map(name => (
+          <div key={name} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:'20px', height:160, display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
+            <div style={{ fontSize:10, color:T.muted, textTransform:'uppercase', letterSpacing:1.2 }}>{name}</div>
+            <div style={{ textAlign:'center', opacity:0.08, fontSize:48 }}>▬▬▬</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign:'center', padding:'28px', background:T.card, border:`1px solid ${T.border}`, borderRadius:10 }}>
+        <div style={{ fontSize:13, color:T.muted }}>Connect Fyers in <strong style={{ color:T.accent }}>Settings</strong> to see your analytics</div>
       </div>
     </div>
   )

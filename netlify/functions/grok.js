@@ -1,31 +1,29 @@
-// netlify/functions/grok.js
-// Proxy for xAI Grok API — keeps GROK_API_KEY server-side
-// Add GROK_API_KEY to Netlify → Site Settings → Environment Variables
-// Get your key at: console.x.ai
+// BharatLenX — Grok AI proxy
+// Env var: GROK_API_KEY (set in Netlify → Site Settings → Environment Variables)
 
 exports.handler = async (event) => {
   const cors = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin':  '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
   }
 
-  if (event.httpMethod === 'OPTIONS') return { statusCode:200, headers:cors, body:'' }
-  if (event.httpMethod !== 'POST')    return { statusCode:405, headers:cors, body: JSON.stringify({ error:'Method not allowed' }) }
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' }
+  if (event.httpMethod !== 'POST')    return { statusCode: 405, headers: cors, body: JSON.stringify({ error: 'Method not allowed' }) }
 
-  const apiKey = process.env.GROK_API_KEY
+  // Support both GROK_API_KEY and GROQ_API_KEY (common typo in Netlify env)
+  const apiKey = process.env.GROK_API_KEY || process.env.GROQ_API_KEY
   if (!apiKey) {
     return {
       statusCode: 400,
       headers: cors,
-      body: JSON.stringify({
-        error: 'GROK_API_KEY not configured. Add it in Netlify → Site Settings → Environment Variables. Get your key at console.x.ai',
-      }),
+      body: JSON.stringify({ error: 'GROK_API_KEY not set in Netlify environment variables. Get your key at console.x.ai' }),
     }
   }
 
   try {
     const { system, userMsg } = JSON.parse(event.body || '{}')
+    if (!userMsg) return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'No message provided' }) }
 
     const res = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
@@ -34,7 +32,7 @@ exports.handler = async (event) => {
         'Content-Type':  'application/json',
       },
       body: JSON.stringify({
-        model:       'grok-3',          // latest Grok model
+        model:       'grok-3',
         max_tokens:  2500,
         temperature: 0.7,
         messages: [
@@ -45,19 +43,12 @@ exports.handler = async (event) => {
     })
 
     const data = await res.json()
-
-    if (!res.ok) {
-      throw new Error(data.error?.message || `xAI API error ${res.status}`)
-    }
+    if (!res.ok) throw new Error(data.error?.message || `xAI error ${res.status}: ${JSON.stringify(data)}`)
 
     const text = data.choices?.[0]?.message?.content || 'No response from Grok.'
-    return { statusCode:200, headers:cors, body: JSON.stringify({ text }) }
+    return { statusCode: 200, headers: cors, body: JSON.stringify({ text }) }
 
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: cors,
-      body: JSON.stringify({ error: err.message }),
-    }
+    return { statusCode: 500, headers: cors, body: JSON.stringify({ error: err.message }) }
   }
 }

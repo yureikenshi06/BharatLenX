@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useTrades } from './hooks/useTrades'
 import Layout        from './components/Layout'
+import LoginPage     from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import TradesPage    from './pages/TradesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
@@ -27,15 +28,22 @@ function AppInner() {
     setSegment, connectFyers, pasteToken, manualSync, applyDateRange, disconnectFyers,
   } = useTrades()
 
-  if (loading || tradesLoading) return (
-    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#03050c', fontFamily:'DM Sans,sans-serif', gap:12 }}>
-      <div style={{ fontSize:28, color:'#4f8fff' }}>◈</div>
-      <div style={{ fontSize:13, color:'#3a527a' }}>
-        {progress || 'Loading BharatLenX...'}
-      </div>
-      {progress && (
-        <div style={{ fontSize:11, color:'#182040', maxWidth:320, textAlign:'center', lineHeight:1.6 }}>{progress}</div>
-      )}
+  // Auth loading
+  if (loading) return (
+    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#000000', fontFamily:'DM Sans,sans-serif', gap:14 }}>
+      <div style={{ fontSize:32, color:'#2979ff' }}>◈</div>
+      <div style={{ fontSize:12, color:'#2a3a5c', letterSpacing:2 }}>BHARATLENX</div>
+    </div>
+  )
+
+  // ── Auth gate — must be signed in ─────────────────────────────────────────
+  if (!user) return <LoginPage />
+
+  // Trades loading
+  if (tradesLoading && !allTrades.length) return (
+    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#000000', fontFamily:'DM Sans,sans-serif', gap:14 }}>
+      <div style={{ fontSize:32, color:'#2979ff' }}>◈</div>
+      <div style={{ fontSize:12, color:'#2a3a5c', letterSpacing:2 }}>{progress || 'LOADING...'}</div>
     </div>
   )
 
@@ -44,7 +52,7 @@ function AppInner() {
   const renderPage = () => {
     switch (page) {
       case 'dashboard': return <DashboardPage {...pageProps}/>
-      case 'trades':    return <TradesPage trades={trades}/>
+      case 'trades':    return <TradesPage    trades={trades}/>
       case 'charts':    return <AnalyticsPage trades={trades} stats={activeStats}/>
       case 'calendar':  return <CalendarPage  trades={allTrades} stats={stats.all||{}}/>
       case 'symbols':   return <SymbolsPage   trades={trades}    stats={activeStats}/>
@@ -52,8 +60,8 @@ function AppInner() {
       case 'progress':  return <ProgressPage  trades={trades}    stats={activeStats}/>
       case 'eod':       return <EODPage       trades={allTrades} stats={stats.all||{}}/>
       case 'checklist': return <ChecklistPage/>
-      case 'notes':     return <NotesPage trades={allTrades}/>
-      case 'ai':        return <AIPage    trades={trades} stats={activeStats}/>
+      case 'notes':     return <NotesPage     trades={allTrades}/>
+      case 'ai':        return <AIPage        trades={trades}    stats={activeStats}/>
       case 'share':     return <ShareCardPage trades={allTrades} stats={stats}/>
       case 'settings':  return (
         <SettingsPage
@@ -70,13 +78,11 @@ function AppInner() {
 
   return (
     <Layout activePage={page} onPageChange={setPage} connected={connected} source={source} trades={allTrades}>
-      {/* Sync indicator — subtle top bar when background sync is running */}
       {syncing && source === 'fyers' && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, height: 2, zIndex: 1000,
-          background: `linear-gradient(90deg, #4f8fff, #00d4ff, #9d7fff, #4f8fff)`,
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 1.4s ease-in-out infinite',
+          position:'fixed', top:0, left:0, right:0, height:2, zIndex:1000,
+          background:'linear-gradient(90deg,#2979ff,#00b0ff,#7c4dff,#2979ff)',
+          backgroundSize:'200% 100%', animation:'shimmer 1.4s ease-in-out infinite',
         }}/>
       )}
       {renderPage()}
