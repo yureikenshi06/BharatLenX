@@ -3,34 +3,73 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MarketLens — F&O Trading Journal</title>
+  <title>BharatLenX — F&O Trading Journal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body, #root { height: 100%; }
-    body { background: #03050c; color: #dde4f5; font-family: 'DM Sans', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-
+    body {
+      background: #03050c; color: #dde4f5;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #182040; border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: #1e2a54; }
     * { scrollbar-width: thin; scrollbar-color: #182040 transparent; }
 
-    @keyframes fadeInUp  { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
-    @keyframes fadeIn    { from { opacity:0 } to { opacity:1 } }
-    @keyframes scaleIn   { from { opacity:0; transform:scale(0.96) } to { opacity:1; transform:scale(1) } }
-    @keyframes spin      { to { transform: rotate(360deg) } }
-    @keyframes pulse     { 0%,100% { opacity:1 } 50% { opacity:0.55 } }
+    /* Smooth GPU-accelerated animations */
+    @keyframes fadeInUp {
+      from { opacity:0; transform:translate3d(0,14px,0); }
+      to   { opacity:1; transform:translate3d(0,0,0); }
+    }
+    @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+    @keyframes scaleIn  {
+      from { opacity:0; transform:scale3d(0.97,0.97,1); }
+      to   { opacity:1; transform:scale3d(1,1,1); }
+    }
+    @keyframes spin     { to{transform:rotate(360deg)} }
+    @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    @keyframes shimmer  {
+      0%  {background-position:-400px 0}
+      100%{background-position: 400px 0}
+    }
 
-    .page-enter { animation: fadeInUp 0.25s ease both; }
-    .card-enter { animation: scaleIn  0.2s ease both; }
-    .dot-pulse  { animation: pulse 1.2s ease infinite; }
+    .page-enter {
+      animation: fadeInUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+      will-change: transform,opacity;
+    }
+    .card-enter {
+      animation: scaleIn 0.22s cubic-bezier(0.22,1,0.36,1) both;
+      will-change: transform,opacity;
+    }
+    .dot-pulse { animation: pulse 1.4s ease-in-out infinite; }
 
-    .recharts-bar-rectangle:hover { filter: brightness(1.15); transition: filter 0.1s; }
-    button { opacity: 1; transition: opacity 0.1s; }
-    button:hover { opacity: 0.85; }
+    button {
+      transition: opacity 0.1s ease, background 0.12s ease,
+                  border-color 0.12s ease, color 0.12s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:hover  { opacity:0.86; }
+    button:active { transform:scale(0.98); transition:transform 0.05s; }
+
+    .recharts-bar-rectangle { transition: filter 0.1s ease; }
+    .recharts-bar-rectangle:hover { filter: brightness(1.15); }
+    .recharts-area-area, .recharts-line-curve {
+      transition: d 0.35s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg,#0b1020 25%,#182040 50%,#0b1020 75%);
+      background-size:400px 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
+      border-radius:6px;
+    }
   </style>
 </head>
 <body>

@@ -23,8 +23,9 @@ function AppInner() {
 
   const {
     trades, allTrades, stats, activeStats, loading: tradesLoading,
-    connected, source, error, progress, dateRange, savedKeys, segment,
-    setSegment, loadDemo, connectFyers, applyDateRange, disconnectFyers,
+    connected, source, error, progress, dateRange, tokenInfo, segment, fyersConnected,
+    csvImporting, csvResult, rawApiSample, globalPnL, userId,
+    setSegment, loadDemo, connectFyers, pasteToken, importCSV, applyDateRange, disconnectFyers,
   } = useTrades()
 
   if (loading) return (
@@ -36,7 +37,7 @@ function AppInner() {
   // Require auth — remove this if you want no-auth mode
   // if (!user) return <LoginPage/>
 
-  const pageProps = { trades, allTrades, stats, activeStats, segment, setSegment, applyDateRange, dateRange }
+  const pageProps = { trades, allTrades, stats, activeStats, segment, setSegment, applyDateRange, dateRange, fyersConnected }
 
   const renderPage = () => {
     switch(page) {
@@ -54,10 +55,13 @@ function AppInner() {
       case 'share':     return <ShareCardPage trades={allTrades} stats={stats}/>
       case 'settings':  return (
         <SettingsPage
-          trades={trades} stats={stats.all} activeStats={activeStats}
-          onConnectFyers={connectFyers} onLoadDemo={loadDemo}
-          onDisconnect={disconnectFyers}
-          source={source} error={error} progress={progress} savedKeys={savedKeys}
+          trades={trades} activeStats={activeStats}
+          onConnect={connectFyers} onPasteToken={pasteToken} onImportCSV={importCSV}
+          onLoadDemo={loadDemo} onDisconnect={disconnectFyers}
+          source={source} error={error} progress={progress}
+          tokenInfo={tokenInfo} csvImporting={csvImporting}
+          csvResult={csvResult} rawApiSample={rawApiSample}
+          userId={userId}
         />
       )
       default: return <DashboardPage {...pageProps}/>

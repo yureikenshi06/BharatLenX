@@ -27,7 +27,7 @@ const PERIOD_OPTS = [
 ]
 
 export default function ShareCardPage({ trades, stats }) {
-  const allStats = stats?.all || stats || {}
+  const allStats = (stats?.all || stats || {})
   const [themeId,   setThemeId]   = useState('navy')
   const [cardType,  setCardType]  = useState('period')
   const [period,    setPeriod]    = useState('monthly')
@@ -66,7 +66,7 @@ export default function ShareCardPage({ trades, stats }) {
       }
       const canvas = await window.html2canvas(el,{backgroundColor:th.bg,scale:2,logging:false,useCORS:true})
       const link = document.createElement('a')
-      link.download = `markettrak-${cardType}-${Date.now()}.png`
+      link.download = `bharatlenx-${cardType}-${Date.now()}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     } catch(e) { alert('Download failed: '+e.message) }
@@ -82,7 +82,7 @@ export default function ShareCardPage({ trades, stats }) {
   const CardContent = () => {
     if (cardType==='period') return (
       <>
-        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:6,opacity:0.8 }}>{periodLabel} · MarketLens</div>
+        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:6,opacity:0.8 }}>{periodLabel} · BharatLenX</div>
         <div style={{ fontSize:32, fontWeight:700, color:periodPnl>=0?th.accent:'#ff4d6a', fontFamily:'JetBrains Mono,monospace', letterSpacing:-1, marginBottom:6, lineHeight:1.1 }}>
           {fmtVal(periodPnl)}
         </div>
@@ -96,7 +96,7 @@ export default function ShareCardPage({ trades, stats }) {
     )
     if (cardType==='alltime') return (
       <>
-        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:6,opacity:0.8 }}>All-Time Performance · MarketLens</div>
+        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:6,opacity:0.8 }}>All-Time Performance · BharatLenX</div>
         <div style={{ fontSize:32, fontWeight:700, color:(allStats.netPnL||0)>=0?th.accent:'#ff4d6a', fontFamily:'JetBrains Mono,monospace', letterSpacing:-1, marginBottom:6 }}>
           {fmtVal(allStats.netPnL||0)}
         </div>
@@ -112,7 +112,7 @@ export default function ShareCardPage({ trades, stats }) {
     )
     if (cardType==='streak') return (
       <>
-        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:10,opacity:0.8 }}>Win Streak · MarketLens 🔥</div>
+        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:10,opacity:0.8 }}>Win Streak · BharatLenX 🔥</div>
         <div style={{ fontSize:72, fontWeight:700, color:th.accent, fontFamily:'JetBrains Mono,monospace', lineHeight:1 }}>{allStats.maxWinStreak||0}</div>
         <div style={{ fontSize:16, color:th.text, opacity:0.6, marginTop:6, marginBottom:16 }}>consecutive wins</div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
@@ -124,7 +124,7 @@ export default function ShareCardPage({ trades, stats }) {
     )
     if (cardType==='milestone') return (
       <>
-        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:8,opacity:0.8 }}>Trading Milestone · MarketLens 🏆</div>
+        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:8,opacity:0.8 }}>Trading Milestone · BharatLenX 🏆</div>
         {customMsg&&<div style={{ fontSize:16,color:th.text,opacity:0.8,marginBottom:12,fontWeight:500 }}>{customMsg}</div>}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:8 }}>
           <StatBox label="Total Trades" value={allStats.total||0}/>
@@ -136,7 +136,7 @@ export default function ShareCardPage({ trades, stats }) {
     )
     if (cardType==='segment') return (
       <>
-        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:10,opacity:0.8 }}>Segment P&L · MarketLens</div>
+        <div style={{ fontSize:10,color:th.accent,textTransform:'uppercase',letterSpacing:2,marginBottom:10,opacity:0.8 }}>Segment P&L · BharatLenX</div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
           <StatBox label="Equity P&L"  value={fmtVal(stats?.equity?.netPnL||0)}  accent={(stats?.equity?.netPnL||0)>=0?'#4f8fff':'#ff4d6a'}/>
           <StatBox label="Options P&L" value={fmtVal(stats?.options?.netPnL||0)} accent={(stats?.options?.netPnL||0)>=0?'#9d7fff':'#ff4d6a'}/>
@@ -220,12 +220,12 @@ export default function ShareCardPage({ trades, stats }) {
           }}>
             <div style={{ position:'absolute',top:-50,right:-50,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${th.accent}22 0%,transparent 70%)`,pointerEvents:'none' }}/>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:22 }}>
-              <div style={{ fontSize:12,fontWeight:700,color:th.accent,letterSpacing:0.5 }}>◈ MARKETTRAK</div>
+              <div style={{ fontSize:12,fontWeight:700,color:th.accent,letterSpacing:0.5 }}>◈ BHARATLENX</div>
               <div style={{ fontSize:9,color:th.text,opacity:0.35 }}>{fmtDate(Date.now())} · NSE/NFO</div>
             </div>
             <CardContent/>
             <div style={{ marginTop:22,paddingTop:12,borderTop:`1px solid ${th.border}33`,display:'flex',justifyContent:'space-between' }}>
-              <div style={{ fontSize:8,color:th.text,opacity:0.25,textTransform:'uppercase',letterSpacing:1 }}>NSE · BSE · NFO · India</div>
+              <div style={{ fontSize:8,color:th.text,opacity:0.25,textTransform:'uppercase',letterSpacing:1 }}>NSE · BSE · NFO · F&O · India</div>
               <div style={{ fontSize:8,color:th.text,opacity:0.25 }}>Not investment advice</div>
             </div>
           </div>

@@ -33,7 +33,7 @@ export default function LoginPage() {
             <span style={{ color:T.accent }}>MARKET</span><span style={{ color:T.muted }}>LENS</span>
           </div>
           <div style={{ fontSize:11, color:T.muted, marginTop:6, letterSpacing:2 }}>
-            NSE · BSE · NFO · TRADING JOURNAL
+            NSE · BSE · NFO · F&O · TRADING JOURNAL
           </div>
         </div>
 

@@ -15,7 +15,7 @@ const DEFAULT_GOALS = {
   tradesPerMonth: 30,
 }
 
-function GoalBar({ label, current, target, unit='$', invert=false }) {
+function GoalBar({ label, current, target, unit='₹', invert=false }) {
   const pct  = target > 0 ? Math.min(100, Math.abs(current)/Math.abs(target)*100) : 0
   const good = invert ? current <= target : current >= target
   const c    = good ? T.green : pct > 60 ? T.accent : T.red
@@ -24,8 +24,8 @@ function GoalBar({ label, current, target, unit='$', invert=false }) {
       <div style={{ display:'flex',justifyContent:'space-between',marginBottom:5 }}>
         <span style={{ fontSize:12,color:T.textMid,fontWeight:500 }}>{label}</span>
         <span style={{ fontSize:12,fontFamily:T.fontMono }}>
-          <span style={{ color:c,fontWeight:700 }}>{unit==='$'?'$':''}{fmt(current,2)}{unit!=='$'?unit:''}</span>
-          <span style={{ color:T.muted }}> / {unit==='$'?'$':''}{fmt(target)}{unit!=='$'?unit:''}</span>
+          <span style={{ color:c,fontWeight:700 }}>{unit==='₹'?'₹':''}{fmt(current,2)}{unit!=='$'?unit:''}</span>
+          <span style={{ color:T.muted }}> / {unit==='₹'?'₹':''}{fmt(target)}{unit!=='$'?unit:''}</span>
         </span>
       </div>
       <div style={{ height:6,background:T.surface,borderRadius:3,overflow:'hidden',border:`1px solid ${T.border}` }}>

@@ -43,8 +43,8 @@ export default function Layout({ children, activePage, onPageChange, connected, 
           <div style={{fontSize:18,color:T.accent,flexShrink:0,fontWeight:700}}>◈</div>
           {!collapsed&&(
             <div>
-              <div style={{fontSize:14,fontWeight:700,color:T.accent,letterSpacing:-0.3,whiteSpace:'nowrap',fontFamily:T.fontSans}}>MarketLens</div>
-              <div style={{fontSize:9,color:T.muted,letterSpacing:1.5,whiteSpace:'nowrap',textTransform:'uppercase'}}>NSE · BSE · NFO</div>
+              <div style={{fontSize:14,fontWeight:700,color:T.accent,letterSpacing:-0.3,whiteSpace:'nowrap',fontFamily:T.fontSans}}>BharatLenX</div>
+              <div style={{fontSize:9,color:T.muted,letterSpacing:1.5,whiteSpace:'nowrap',textTransform:'uppercase'}}>NSE · BSE · NFO · F&O</div>
             </div>
           )}
         </div>

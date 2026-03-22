@@ -28,8 +28,8 @@ function DayGoalsTracker({ dayTrades, dayPnL, dayFees }) {
   const winRate   = dayTrades.length ? dayWins/dayTrades.length*100 : 0
 
   const items = [
-    { label:'Daily P&L Target',  current:dayPnL,              target:g.targetPnL,  unit:'$', good:dayPnL>=g.targetPnL,            fmt:v=>(v>=0?'+₹':'-₹')+fmt(Math.abs(v)) },
-    { label:'Max Loss Limit',    current:Math.abs(Math.min(0,dayPnL)), target:g.maxLoss, unit:'$', good:dayPnL>=-g.maxLoss, invert:true, fmt:v=>'₹'+fmt(v) },
+    { label:'Daily P&L Target',  current:dayPnL,              target:g.targetPnL,  unit:'₹', good:dayPnL>=g.targetPnL,            fmt:v=>(v>=0?'+₹':'-₹')+fmt(Math.abs(v)) },
+    { label:'Max Loss Limit',    current:Math.abs(Math.min(0,dayPnL)), target:g.maxLoss, unit:'₹', good:dayPnL>=-g.maxLoss, invert:true, fmt:v=>'₹'+fmt(v) },
     { label:'Max Trades',        current:dayTrades.length,    target:g.maxTrades,  unit:'', good:dayTrades.length<=g.maxTrades,  invert:true, fmt:v=>v+' trades' },
     { label:'Win Rate Goal',     current:winRate,             target:g.minWinRate, unit:'%', good:winRate>=g.minWinRate,           fmt:v=>fmt(v)+'%' },
   ]

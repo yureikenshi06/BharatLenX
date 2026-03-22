@@ -8,7 +8,17 @@ import { fmt } from '../lib/data'
 import { Card, SectionHead, ChartTooltip } from '../components/UI'
 
 export default function AnalyticsPage({ trades, stats }) {
-  if (!trades?.length) return null
+  if (!trades?.length) return (
+    <div style={{ padding:'32px 28px', fontFamily:'var(--font-sans, sans-serif)' }}>
+      <div style={{ fontSize:11, color:'#3a527a', textTransform:'uppercase', letterSpacing:1.5, marginBottom:4 }}>Analysis</div>
+      <div style={{ fontSize:22, fontWeight:700, marginBottom:24 }}>Advanced Analytics</div>
+      <div style={{ textAlign:'center', padding:'60px 24px', background:'#0b1020', border:'1px solid #182040', borderRadius:10 }}>
+        <div style={{ fontSize:32, opacity:0.2, marginBottom:14 }}>📊</div>
+        <div style={{ fontSize:15, fontWeight:600, color:'#dde4f5', marginBottom:8 }}>No trades to analyse</div>
+        <div style={{ fontSize:12, color:'#3a527a' }}>Import your Fyers CSV or connect Fyers API in Settings.</div>
+      </div>
+    </div>
+  )
 
   // Trade-by-trade waterfall (first 80)
   const waterfallData = trades.slice(0, 80).map((t, i) => ({ i: i+1, pnl: t.pnl, sym: t.symbol }))
@@ -26,21 +36,22 @@ export default function AnalyticsPage({ trades, stats }) {
   const levWR = levArr.map(l => ({ ...l, wr: +(l.wins/l.count*100).toFixed(1) }))
 
   // Risk % distribution
-  const riskBuckets = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5].map(r => ({
+  const riskBuckets = [0.5,1,1.5,2,2.5,3,4,5].map(r => ({
     range: r+'%',
     count: trades.filter(t => t.riskPercent <= r && t.riskPercent > r-0.5).length,
     pnl:   trades.filter(t => t.riskPercent <= r && t.riskPercent > r-0.5).reduce((s,t)=>s+t.pnl,0),
   }))
 
   // PnL distribution histogram
-  const pnlVals  = trades.map(t=>t.pnl)
+  const pnlVals  = trades.map(t=>t.pnl).filter(v=>typeof v==='number'&&isFinite(v))
+  if (!pnlVals.length) pnlVals.push(0)
   const minPnl   = Math.min(...pnlVals), maxPnl = Math.max(...pnlVals)
   const buckets  = 20
   const step     = (maxPnl - minPnl) / buckets || 1
   const histogram = Array.from({length:buckets}, (_,i) => {
     const from = minPnl + i*step
     const count = trades.filter(t => t.pnl >= from && t.pnl < from+step).length
-    return { label:'$'+from.toFixed(0), from, count, isPos: from >= 0 }
+    return { label:'₹'+from.toFixed(0), from, count, isPos: from >= 0 }
   })
 
   // Hour heatmap

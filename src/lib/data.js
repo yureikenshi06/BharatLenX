@@ -138,7 +138,7 @@ export function saveCashFlow(cf) {
 }
 
 export function computeStats(trades) {
-  if (!trades?.length) return {}
+  if (!trades?.length||!Array.isArray(trades)) return {total:0}
   const winners  = trades.filter(t=>t.pnl>0)
   const losers   = trades.filter(t=>t.pnl<0)
   const decided  = winners.length+losers.length
@@ -216,7 +216,8 @@ export function computeStats(trades) {
   }
 
   // PnL distribution
-  const pnlVals=trades.map(t=>t.pnl)
+  const pnlVals=trades.map(t=>t.pnl).filter(v=>typeof v==='number'&&isFinite(v))
+  if(!pnlVals.length)pnlVals.push(0)
   const minPnl=Math.min(...pnlVals),maxPnl=Math.max(...pnlVals)
   const step=(maxPnl-minPnl)/24||1
   const distribution=Array.from({length:24},(_,i)=>{const from=minPnl+i*step;return{label:'₹'+from.toFixed(0),from,count:trades.filter(t=>t.pnl>=from&&t.pnl<from+step).length,isPositive:from>=0}})
@@ -250,7 +251,7 @@ export function computeStats(trades) {
     longWR:longs.length?longs.filter(t=>t.pnl>0).length/longs.length*100:0,
     shortWR:shorts.length?shorts.filter(t=>t.pnl>0).length/shorts.length*100:0,
     maxWinStreak,maxLossStreak,currentStreak,
-    largestWin:Math.max(...pnlVals),largestLoss:Math.min(...pnlVals),
+    largestWin:pnlVals.length?Math.max(...pnlVals):0,largestLoss:pnlVals.length?Math.min(...pnlVals):0,
     byHour,byDay,dayStats,distribution,sharpe,
     avgRiskPct:trades.reduce((s,t)=>s+(t.riskPercent||0),0)/trades.length,
     startEquity,endEquity,totalReturn,
@@ -262,13 +263,14 @@ export function computeStats(trades) {
 
 // Segment-filtered stats
 export function computeSegmentStats(trades, segment) {
-  if (!trades?.length) return {}
+  if (!trades?.length||!Array.isArray(trades)) return {total:0}
   const filtered = segment === 'all' ? trades : trades.filter(t => getSegment(t) === segment)
   return computeStats(filtered)
 }
 
 export const fmt     = (n,d=2) => n==null||isNaN(n)?'—':Number(n).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d})
 export const fmtUSD  = (n) => (n>=0?'+₹':'-₹')+fmt(Math.abs(n))
+export const fmtINR  = (n) => (n>=0?'+₹':'-₹')+fmt(Math.abs(n))
 export const fmtPct  = (n) => (n>=0?'+':'')+fmt(n)+'%'
 export const fmtDate = (ms) => new Date(ms).toLocaleDateString('en-IN',{month:'short',day:'numeric',year:'numeric'})
 export const fmtTime = (ms) => new Date(ms).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})

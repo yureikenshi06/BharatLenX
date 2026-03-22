@@ -13,11 +13,35 @@ const PERIOD_OPTIONS = [
   { value:'quarterly', label:'Quarterly' }, { value:'yearly', label:'Yearly' },
 ]
 
-export default function DashboardPage({ trades, stats, activeStats, segment, setSegment, applyDateRange, dateRange }) {
+export default function DashboardPage({ trades, stats, activeStats, segment, setSegment, applyDateRange, dateRange, fyersConnected }) {
   const [period, setPeriod] = useState('monthly')
   const [startDate, setStart] = useState('')
   const [endDate,   setEnd]   = useState('')
   const st = activeStats || {}
+
+  // Fyers connected but genuinely zero trades — don't show demo data
+  if (fyersConnected && (!trades || trades.length === 0)) {
+    return (
+      <div style={{ padding:'24px 28px', fontFamily:T.fontSans }}>
+        <div style={{ marginBottom:18, paddingBottom:14, borderBottom:`1px solid ${T.border}` }}>
+          <div style={{ fontSize:11, color:T.muted, textTransform:'uppercase', letterSpacing:1.5, marginBottom:4 }}>Overview · NSE / NFO</div>
+          <div style={{ fontSize:22, fontWeight:700, letterSpacing:-0.5 }}>Dashboard</div>
+        </div>
+        <div style={{ textAlign:'center', padding:'80px 24px' }}>
+          <div style={{ fontSize:52, marginBottom:20, opacity:0.15 }}>📊</div>
+          <div style={{ fontSize:18, fontWeight:700, marginBottom:10 }}>No Trades Found</div>
+          <div style={{ fontSize:13, color:T.muted, lineHeight:1.8, maxWidth:440, margin:'0 auto 20px' }}>
+            Connected to Fyers successfully, but no trades were found in the last 2 years.<br/>
+            Once you start trading, your history will appear here automatically.
+          </div>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:T.greenDim, border:`1px solid ${T.green}33`, borderRadius:8, padding:'8px 16px' }}>
+            <div style={{ width:7,height:7,borderRadius:'50%',background:T.green }}/>
+            <span style={{ fontSize:12, color:T.green, fontWeight:600 }}>Fyers Account Connected</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!trades?.length) return <div style={{ padding:32, color:T.muted, fontFamily:T.fontSans }}>No trade data loaded.</div>
 

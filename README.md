@@ -1,25 +1,22 @@
 # MarketLens — Indian F&O & Swing Trading Journal
 
-A sophisticated trading journal for Indian markets (NSE/BSE/NFO) built with React + Vite.
-Connects to **Fyers API** for live trade data. Dark navy theme. INR formatting throughout.
+Fully automated NSE/BSE/NFO trading journal. Add your credentials once to Netlify — the app logs into Fyers **automatically every day** using TOTP. No manual token pasting ever.
 
 ---
 
-## Features
+## How Auto-Login Works
 
-- **Segment Toggle** — View Equity / Options / Futures / All separately on every page
-- **Dashboard** — P&L curve, drawdown, segment breakdown, radar score, day-of-week analysis
-- **Trade Log** — Full sortable/filterable table with INR values, segment badges
-- **Analytics** — Waterfall, P&L distribution, leverage analysis, 24hr heatmap
-- **Calendar** — Trading calendar with Indian market holiday markers
-- **Instruments** — Per-symbol deep analysis with equity curves
-- **Capital** — Deposit/withdrawal tracking + live positions from Fyers
-- **Progress** — Monthly goals tracker with score
-- **Day Summary** — EOD journal with intraday breakdown
-- **Checklists** — Pre-market checklist
-- **Journal** — Trade notes with mood tagging
-- **AI Analysis** — Claude-powered coaching (needs Anthropic API key)
-- **Share Card** — Generate performance images (5 themes incl. Segment Split)
+```
+You add 5 env vars to Netlify (one time)
+            ↓
+App opens → calls /.netlify/functions/fyers-auth
+            ↓
+Serverless function: TOTP → verify PIN → get auth_code → exchange for token
+            ↓
+Token returned to browser → trades fetched automatically
+            ↓
+Token cached 23h in sessionStorage → auto-refreshed next day
+```
 
 ---
 
@@ -27,145 +24,137 @@ Connects to **Fyers API** for live trade data. Dark navy theme. INR formatting t
 
 ```bash
 npm install
-npm run dev
+npm run dev   # Demo mode with 200 mock trades — works immediately
 ```
 
-Open http://localhost:3000
+For full auto-login locally you need Netlify CLI:
+```bash
+npm install -g netlify-cli
+netlify dev   # Runs functions locally too
+```
 
 ---
 
-## STEP-BY-STEP: Supabase Setup
+## ONE-TIME SETUP
 
-### 1. Create Supabase Project
-1. Go to https://supabase.com → **New Project**
-2. Pick a name, set a strong database password, choose region (Asia South preferred)
-3. Wait ~2 minutes for project to provision
+### STEP 1 — Enable Fyers External TOTP
 
-### 2. Run SQL Schema
-Go to **SQL Editor** in your Supabase dashboard, paste and run this:
+This is the key step that allows passwordless login from your server.
+
+1. Log in to **myaccount.fyers.in**
+2. Go to **Manage Account → Security Settings**
+3. Enable **"External 2FA TOTP"**
+4. You'll see a QR code — **copy the TOTP SECRET KEY text** (e.g. `ABCDEFGHIJK234567`)
+5. Optionally scan it with Google Authenticator too
+6. **Save this key** — you'll need it as `FYERS_TOTP_KEY`
+
+> This is a one-time setup. The TOTP key never changes unless you reset it.
+
+---
+
+### STEP 2 — Create a Fyers API App
+
+1. Go to **myapi.fyers.in → Dashboard → Create App**
+2. Fill in:
+   - App Name: `MarketLens`
+   - Redirect URI: your Netlify URL e.g. `https://markettrak.netlify.app`
+   - Permissions: Read Orders, Positions, Trades
+3. Note your **App ID** (e.g. `XJ12345`) and **Secret Key**
+
+---
+
+### STEP 3 — Add Env Vars to Netlify
+
+Go to **Netlify → Site Settings → Environment Variables → Add variable**:
+
+```
+FYERS_APP_ID        =  XJ12345              (App ID, without the -100 suffix)
+FYERS_SECRET_KEY    =  your_secret_key
+FYERS_USER_ID       =  XJ12345              (your Fyers client ID)
+FYERS_PIN           =  1234                 (4-digit Fyers PIN)
+FYERS_TOTP_KEY      =  ABCDEFGHIJK...       (TOTP secret from Step 1)
+FYERS_REDIRECT_URI  =  https://markettrak.netlify.app
+
+VITE_SUPABASE_URL      =  https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY =  eyJ...
+ANTHROPIC_API_KEY      =  sk-ant-...        (optional, for AI Analysis)
+```
+
+After adding → **Deploys → Trigger deploy → Deploy site**
+
+---
+
+### STEP 4 — Supabase Setup (for journal notes sync)
+
+1. **supabase.com → New Project**
+2. SQL Editor → run:
 
 ```sql
--- Trade notes
 CREATE TABLE trade_notes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users NOT NULL,
-  trade_id text, date date, symbol text,
   title text, body text, mood text, tags text[],
+  symbol text, date date,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
 ALTER TABLE trade_notes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users own their notes" ON trade_notes
-  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own" ON trade_notes FOR ALL USING (auth.uid() = user_id);
 
--- Capital flow (deposits & withdrawals)
 CREATE TABLE capital_flow (
   id text PRIMARY KEY,
   user_id uuid REFERENCES auth.users NOT NULL,
-  type text NOT NULL,
-  amount numeric NOT NULL,
-  time bigint NOT NULL,
-  date text, note text,
+  type text NOT NULL, amount numeric NOT NULL,
+  time bigint NOT NULL, date text, note text,
   created_at timestamptz DEFAULT now()
 );
 ALTER TABLE capital_flow ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users own their flow" ON capital_flow
-  FOR ALL USING (auth.uid() = user_id);
-
--- API keys (optional — for storing Fyers client ID)
-CREATE TABLE api_keys (
-  user_id uuid PRIMARY KEY REFERENCES auth.users,
-  api_key text, label text,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users own their keys" ON api_keys
-  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own" ON capital_flow FOR ALL USING (auth.uid() = user_id);
 ```
 
-### 3. Create Your Account
-1. Go to **Authentication → Users → Invite user**
-2. Enter YOUR email and invite yourself
-3. Check your email, click the link, set your password
-
-### 4. Get Your API Keys
-1. Go to **Project Settings → API**
-2. Copy **Project URL** → this is your `VITE_SUPABASE_URL`
-3. Copy **anon public** key → this is your `VITE_SUPABASE_ANON_KEY`
-
-### 5. Create .env File
-Create a file named `.env` in the project root:
-```
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-```
+3. **Authentication → Users → Invite user** — enter your email
+4. **Authentication → URL Configuration** → set Site URL to your Netlify app URL
 
 ---
 
-## STEP-BY-STEP: Netlify Deployment
+### STEP 5 — Deploy to Netlify
 
-### 1. Push to GitHub
 ```bash
 git init
 git add .
 git commit -m "MarketLens initial"
-# Create a new PRIVATE repo on github.com
-git remote add origin https://github.com/YOUR_USERNAME/markettrak.git
+# Create a PRIVATE repo on github.com, then:
+git remote add origin https://github.com/YOU/markettrak.git
 git push -u origin main
 ```
 
-### 2. Deploy on Netlify
-1. Go to https://netlify.com → **Add new site → Import from Git**
-2. Connect GitHub → Select your repo
-3. Build settings:
-   - **Build command:** `npm run build`
-   - **Publish directory:** `dist`
+Netlify:
+1. **Add new site → Import from Git → select repo**
+2. Build command: `npm run build`
+3. Publish directory: `dist`
 4. Click **Deploy site**
 
-### 3. Add Environment Variables
-Go to **Site Settings → Environment Variables → Add variable**:
-```
-VITE_SUPABASE_URL       = https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY  = your-anon-key
-ANTHROPIC_API_KEY       = sk-ant-...  (optional, for AI Analysis)
-```
+---
 
-### 4. Set Supabase Auth URL
-Back in Supabase: **Authentication → URL Configuration**
-- Set **Site URL** to your Netlify URL (e.g. `https://markettrak.netlify.app`)
+## Daily Use
 
-### 5. Redeploy
-In Netlify dashboard → **Deploys → Trigger deploy** → Deploy site
+Just open your app URL. Auto-login handles everything:
+- Token generated via TOTP silently in background
+- Trade book loaded automatically
+- Token cached 23h, refreshed next day
 
 ---
 
-## Connecting Fyers
+## Troubleshooting
 
-### Daily workflow (tokens expire every day):
-1. Go to https://myapi.fyers.in → Log in
-2. **My Apps → API Playground** → Generate Access Token
-3. In MarketLens → **Settings** → paste your App ID and Access Token
-4. Click **Connect to Fyers**
-
-### One-time setup:
-1. Create an app at myapi.fyers.in
-2. Note your **App ID** (format: `AB12345-100`)
-3. Required permissions: `orders:read`, `positions:read`, `trades:read`
-
----
-
-## AI Analysis (Optional)
-
-For the AI Analysis feature:
-1. Get an API key from https://console.anthropic.com
-2. Add `ANTHROPIC_API_KEY` to Netlify environment variables
-3. The feature calls `/.netlify/functions/ai` which proxies to Claude
-
-To test locally:
-```bash
-npm install -g netlify-cli
-netlify dev   # NOT npm run dev
-```
+| Problem | Fix |
+|---------|-----|
+| "Auto-login not configured" | Add FYERS_* env vars to Netlify and redeploy |
+| "Step 2 TOTP failed" | FYERS_TOTP_KEY is wrong — re-copy from myaccount.fyers.in |
+| "Step 3 PIN failed" | FYERS_PIN is wrong — it's your Fyers 4-digit login PIN |
+| No trades showing | Trade book only has today — historical needs date range |
+| Works locally, not Netlify | Check env vars saved + triggered redeploy after adding them |
+| "Failed to fetch" in local dev | Use `netlify dev` not `npm run dev` |
 
 ---
 
@@ -173,37 +162,23 @@ netlify dev   # NOT npm run dev
 
 ```
 markettrak/
-├── src/
-│   ├── components/
-│   │   ├── Layout.jsx      # Sidebar navigation
-│   │   └── UI.jsx          # All UI components + SegmentToggle
-│   ├── hooks/
-│   │   ├── useAuth.jsx     # Supabase auth context
-│   │   └── useTrades.js    # Fyers API + trade state + segment filter
-│   ├── lib/
-│   │   ├── data.js         # Mock data, stats computation, INR formatting
-│   │   ├── supabase.js     # Supabase client + DB helpers
-│   │   └── theme.js        # Deep navy colour palette
-│   ├── pages/              # All 13 pages
-│   ├── App.jsx             # Route/page switcher
-│   └── main.jsx            # Entry point
 ├── netlify/functions/
-│   └── ai.js               # Anthropic API proxy
-├── index.html
-├── netlify.toml
-└── package.json
+│   ├── fyers-auth.js      AUTO-LOGIN: TOTP flow, reads Netlify env vars
+│   └── ai.js              AI Analysis proxy
+├── src/
+│   ├── hooks/
+│   │   ├── useTrades.js   Calls fyers-auth on startup, caches token 23h
+│   │   └── useAuth.jsx    Supabase auth
+│   ├── lib/
+│   │   ├── theme.js       Deep navy blue palette
+│   │   ├── data.js        Indian market mock data + INR formatting
+│   │   └── supabase.js    Supabase client + DB helpers
+│   ├── components/
+│   │   ├── Layout.jsx     Sidebar navigation
+│   │   └── UI.jsx         Components + SegmentToggle
+│   └── pages/             13 pages — Dashboard, Trades, Analytics, etc.
+└── README.md
 ```
-
----
-
-## Tech Stack
-
-- **React 18** + **Vite 5**
-- **Recharts** — all charts
-- **Supabase** — auth + database (journal notes, capital flow)
-- **Fyers API v3** — live trade data
-- **Netlify** — hosting + serverless functions (AI proxy)
-- **DM Sans** + **JetBrains Mono** — typography
 
 ---
 

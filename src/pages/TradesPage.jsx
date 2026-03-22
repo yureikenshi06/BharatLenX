@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { THEME as T, colorPnL } from '../lib/theme'
-import { fmt, fmtDate, fmtTime, fmtUSD } from '../lib/data'
+import { fmt, fmtDate, fmtTime } from '../lib/data'
 import { Card, SectionHead, Badge, Btn, Select } from '../components/UI'
 
 const COLS = [
