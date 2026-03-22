@@ -8,8 +8,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: { port: 5173 },
     define: {
-      // Bridge non-VITE_ Netlify env vars so browser can read them
-      // Works for both FYERS_APP_ID and VITE_FYERS_APP_ID
+      // Bridge both FYERS_* and VITE_FYERS_* env var naming conventions
       'import.meta.env.VITE_FYERS_APP_ID':
         JSON.stringify(env.VITE_FYERS_APP_ID || env.FYERS_APP_ID || ''),
       'import.meta.env.VITE_FYERS_SECRET_KEY':

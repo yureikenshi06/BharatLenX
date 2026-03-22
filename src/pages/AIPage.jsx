@@ -69,7 +69,7 @@ Reference specific numbers from the data. Give an overall score /10 in the verdi
     : `Full analysis of my Indian F&O trading performance.\n\nStats (INR):\n${JSON.stringify(summary, null, 2)}`
 
   // Call via Netlify proxy to keep API key server-side
-  const res = await fetch('/.netlify/functions/grok', {
+  const res = await fetch('/grok', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ system, userMsg }),
@@ -124,7 +124,7 @@ export default function AIPage({ trades, stats }) {
       setAnalysis(result)
       setHistory(h => [{ prompt: q||'Full Analysis', result, ts: Date.now() }, ...h.slice(0,4)])
     } catch (e) {
-      setError('Grok analysis failed: ' + e.message + '\n\nMake sure GROK_API_KEY is set in Netlify environment variables and you\'re running via netlify dev.')
+      setError('Grok analysis failed: ' + e.message + '\n\nMake sure GROK_API_KEY is set in Cloudflare Pages environment variables.')
     }
     setLoading(false)
   }
@@ -249,7 +249,7 @@ export default function AIPage({ trades, stats }) {
             <div style={{ fontSize:11, color:T.muted, lineHeight:1.9 }}>
               <div style={{ marginBottom:6 }}>1. Get API key from <span style={{ color:'#00e5ff' }}>console.x.ai</span></div>
               <div style={{ marginBottom:6 }}>2. Add <code style={{ background:T.surface, padding:'1px 5px', borderRadius:3, color:T.accent, fontFamily:T.fontMono, fontSize:10 }}>GROK_API_KEY</code> to Netlify env vars</div>
-              <div>3. Run locally with <code style={{ background:T.surface, padding:'1px 5px', borderRadius:3, color:T.accent, fontFamily:T.fontMono, fontSize:10 }}>netlify dev</code></div>
+              <div>3. Run locally with <code style={{ background:T.surface, padding:'1px 5px', borderRadius:3, color:T.accent, fontFamily:T.fontMono, fontSize:10 }}>wrangler pages dev dist</code></div>
             </div>
           </Card>
         </div>
